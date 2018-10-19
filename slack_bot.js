@@ -22,9 +22,21 @@ class SlackBot {
 
     this.deathWords = [
       'die',
-      'dead',
       'death',
       'knife',
+      'cease',
+      'bones',
+      'perish',
+      'mortal',
+      'grave',
+      'macabre',
+      'croak',
+      'drown',
+      'bury',
+      'pass',
+      'entomb',
+      'embalm',
+      'reaper'
     ]
     this.weakness = this._getDeathWord()
     this.weakRE = new RegExp(this.weakness)
@@ -38,14 +50,16 @@ class SlackBot {
   }
 
   send(message) {
-    if (this.alive) {
-      this.connection.send({ channel: this.SLACK_CHANNEL, message })
-    } else {
-      this.connection.send({
-        channel: this.SLACK_CHANNEL,
-        message: (':skull_and_crossbones:' + message + ':skull_and_crossbones:')
-      })
-    }
+    setTimeout(() => {
+      if (this.alive) {
+        this.connection.send({ channel: this.SLACK_CHANNEL, message })
+      } else {
+        this.connection.send({
+          channel: this.SLACK_CHANNEL,
+          message: (':skull_and_crossbones:' + message + ':skull_and_crossbones:')
+        })
+      }
+    }, 1000)
   }
 
   _handleMessage(message) {
