@@ -36,4 +36,4 @@ You can change the `handleMessage` method in `index.js` to reply to a message in
 }
 ```
 
-You can use [`self.connection.rtm.datastore`](https://github.com/slackapi/node-slack-sdk/blob/7c192744d49e57938513869365836afca8efeae6/docs/_reference/SlackMemoryDataStore.md) to get user/channel information from an id.
+You can use [`this.connection.rtm.datastore`](https://github.com/slackapi/node-slack-sdk/blob/7c192744d49e57938513869365836afca8efeae6/docs/_reference/SlackMemoryDataStore.md) to get user/channel information from an id.
