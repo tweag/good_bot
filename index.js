@@ -1,10 +1,21 @@
 var app = require('./app')
 var SlackBot = require('./slack_bot')
 
-
 class MyBot extends SlackBot {
-  handleMessage(message) {
-    console.log(message)
+  aliveResponse (message) {
+    if (message.text === 'who is alive') {
+      this.send('I am')
+    }
+  }
+
+  dyingWords () {
+    this.send("AARRHHHHGGGGGGG!!!")
+  }
+
+  deadResponse(message) {
+    if (message.text === 'who is dead') {
+      this.send('I am')
+    }
   }
 }
 
