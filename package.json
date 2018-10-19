@@ -2,5 +2,14 @@
   "name": "boot",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "repl": "node -i -e \"$(< index.js)\"",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@slack/client": "^3.10.0",
+    "dotenv": "^6.1.0",
+    "express": "^4.16.4"
+  }
 }
