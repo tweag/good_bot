@@ -1,4 +1,3 @@
-var app = require('./app')
 var SlackBot = require('./slack_bot')
 
 class MyBot extends SlackBot {
@@ -20,7 +19,3 @@ class MyBot extends SlackBot {
 }
 
 const bot = new MyBot()
-
-app.listen(app.get('port'), function() {
-  console.log('the best bot ever is live', app.get('port'))
-})
