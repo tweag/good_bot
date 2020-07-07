@@ -19,6 +19,7 @@ class SlackBot {
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
+    this.connection.start()
 
     this.deathWords = [
       'die',

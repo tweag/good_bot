@@ -8,7 +8,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@slack/client": "^3.10.0",
+    "@slack/rtm-api": "^5.0.5",
     "dotenv": "^6.1.0"
   }
 }

@@ -1,51 +1,29 @@
-var RTM_EVENTS = require('@slack/client').RTM_EVENTS
-var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM
-
-var RtmClient = require('@slack/client').RtmClient
-var MemoryDataStore = require('@slack/client').MemoryDataStore
+const { RTMClient } = require('@slack/rtm-api');
 
 class Connection {
   constructor ({ token, callback }) {
     this.listeners = {}
-
-    this.rtm = new RtmClient(token, { dataStore: new MemoryDataStore() })
-    this.rtm.start()
-    this.rtm.on(RTM_CLIENT_EVENTS.AUTHENTICATED, (data) => {
-      this.botId = data.self.id
-      if (callback) {
-        callback()
-      }
-    })
-    this.rtm.on(RTM_EVENTS.MESSAGE, this.receive.bind(this))
+    this.rtm = new RTMClient(token);
+    this.rtm.on('message', this._receive)
   }
 
-  getChannelByName (channelName) {
-    return this.rtm.dataStore.getChannelByName(channelName)
-  }
-
-  getChannelById (channelId) {
-    return this.rtm.dataStore.getChannelById(channelId)
-  }
-
-  send ({ channel: channelName, message }) {
-    let channel = this.getChannelByName(channelName)
-    if (channel) {
-      this.rtm.sendMessage(message, channel.id)
+  _receive = event => {
+    const listener = this.listeners[event.channel]
+    if (listener) {
+      listener(event)
     }
   }
 
-  receive (message) {
-    let channel = this.getChannelById(message.channel)
-    if (channel) {
-      let listener = this.listeners[channel.name]
-      if (listener) {
-        listener(message)
-      }
-    }
+  async start () {
+    const { self } = await this.rtm.start()
+    return self.id
+  }
+
+  send ({ channel, message }) {
+    this.rtm.sendMessage(message, channel)
   }
 
   listen ({ channel, callback }) {
-    console.log('listening to ' + channel)
     this.listeners[channel] = callback
   }
 }
