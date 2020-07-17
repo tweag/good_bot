@@ -12,14 +12,13 @@ class SlackBot {
       }
     }
 
-    this.TOKEN = process.env.TOKEN
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
-    this.connection = new Connection({ token: this.TOKEN })
+    this.connection = new Connection()
     this.connection.listen({
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
-    this.connection.start()
+    this.connection.start().then((id) => console.log(id))
 
     this.deathWords = [
       'die',

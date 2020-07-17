@@ -1,9 +1,10 @@
+require('dotenv').config({silent: true})
 const { RTMClient } = require('@slack/rtm-api');
 
 class Connection {
-  constructor ({ token, callback }) {
+  constructor () {
     this.listeners = {}
-    this.rtm = new RTMClient(token);
+    this.rtm = new RTMClient(process.env.TOKEN);
     this.rtm.on('message', this._receive)
   }
 
