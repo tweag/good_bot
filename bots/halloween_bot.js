@@ -1,6 +1,6 @@
 require('dotenv').config({silent: true})
 
-var Connection = require('./connection')
+var Connection = require('../connection')
 
 
 class SlackBot {

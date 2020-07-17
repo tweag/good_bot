@@ -1,6 +1,6 @@
-var SlackBot = require('./slack_bot')
+var HalloweenBot = require('./bots/halloween_bot')
 
-class MyBot extends SlackBot {
+class MyBot extends HalloweenBot {
   aliveResponse (message) {
     if (message.text === 'who is alive') {
       this.send('I am')
