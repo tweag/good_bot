@@ -1,7 +1,6 @@
-var app = require('./app')
-var SlackBot = require('./slack_bot')
+var HalloweenBot = require('./bots/halloween_bot')
 
-class MyBot extends SlackBot {
+class MyBot extends HalloweenBot {
   aliveResponse (message) {
     if (message.text === 'who is alive') {
       this.send('I am')
@@ -20,7 +19,3 @@ class MyBot extends SlackBot {
 }
 
 const bot = new MyBot()
-
-app.listen(app.get('port'), function() {
-  console.log('the best bot ever is live', app.get('port'))
-})

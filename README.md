@@ -10,7 +10,7 @@ To install necessary dependencies run:
 A .env file should be created with the following values:
 
 1. `TOKEN` -- the token for the bot, from Slack
-1. `SLACK_CHANNEL` -- the name of the channel for the bot to join
+1. `SLACK_CHANNEL` -- the id of the channel for the bot to join
 
 ## Running the bot
 
@@ -25,15 +25,29 @@ You can change the `handleMessage` method in `index.js` to reply to a message in
 
 ```
 {
+  bot_id: '<botid>',
+  suppress_notification: false,
   type: 'message',
-  user: 'U0B237ZQ4',
-  text: 'I sense a human behind the curtain',
-  client_msg_id: 'c59b1d38-88b7-4f45-99a0-3b36398f1019',
-  team: 'T02HFLGRQ',
-  channel: 'CDHGVMN3R',
-  event_ts: '1539910276.000100',
-  ts: '1539910276.000100'
+  text: 'hello',
+  user: '<userwhosentmessageid>',
+  team: '<slackteamid>',
+  bot_profile: {
+    id: '<botid>',
+    deleted: false,
+    name: 'bot',
+    updated: 1595012383,
+    app_id: '<appid>',
+    icons: {
+      image_36: 'https://a.slack-edge.com/80588/img/services/bots_36.png',
+      image_48: 'https://a.slack-edge.com/80588/img/plugins/bot/service_48.png',
+      image_72: 'https://a.slack-edge.com/80588/img/services/bots_72.png'
+    },
+    team_id: '<slackteamid>'
+  },
+  source_team: '<slackteamid>',
+  user_team: '<slackteamid>',
+  channel: '<channelid>',
+  event_ts: '1595014649.005100',
+  ts: '1595014649.005100'
 }
 ```
-
-You can use [`this.connection.rtm.datastore`](https://github.com/slackapi/node-slack-sdk/blob/7c192744d49e57938513869365836afca8efeae6/docs/_reference/SlackMemoryDataStore.md) to get user/channel information from an id.

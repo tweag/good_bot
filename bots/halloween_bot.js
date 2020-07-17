@@ -1,6 +1,6 @@
 require('dotenv').config({silent: true})
 
-var Connection = require('./connection')
+var Connection = require('../connection')
 
 
 class SlackBot {
@@ -12,13 +12,13 @@ class SlackBot {
       }
     }
 
-    this.TOKEN = process.env.TOKEN
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
-    this.connection = new Connection({ token: this.TOKEN })
+    this.connection = new Connection()
     this.connection.listen({
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
+    this.connection.start().then((id) => console.log(id))
 
     this.deathWords = [
       'die',
@@ -42,7 +42,6 @@ class SlackBot {
     this.weakRE = new RegExp(this.weakness)
     this.alive = true
   }
-
 
   _getDeathWord () {
     const index = Math.floor(Math.random() * (this.deathWords.length))
@@ -71,12 +70,6 @@ class SlackBot {
     } else {
       this.deadResponse(message)
     }
-  }
-
-  dyingWords () { }
-
-  handleMessage(message) {
-    console.log('Got a message', message)
   }
 }
 
