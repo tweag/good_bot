@@ -43,7 +43,6 @@ class SlackBot {
     this.alive = true
   }
 
-
   _getDeathWord () {
     const index = Math.floor(Math.random() * (this.deathWords.length))
     return this.deathWords[index]
@@ -71,12 +70,6 @@ class SlackBot {
     } else {
       this.deadResponse(message)
     }
-  }
-
-  dyingWords () { }
-
-  handleMessage(message) {
-    console.log('Got a message', message)
   }
 }
 
