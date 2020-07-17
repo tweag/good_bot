@@ -20,9 +20,12 @@ class GuessBot {
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
-    this.connection.start().then((id) => {
-      this.myselfRE = new RegExp(id)
-    })
+    this.connection.start().then(this._setId)
+  }
+
+  _setId = (id) => {
+    this.id = id
+    this.myselfRE = new RegExp(id)
   }
 
   _handleBegin(text) {
@@ -33,17 +36,11 @@ class GuessBot {
 
   _handleReward(text) {
     const parts = text.split(rewardRE)
-    const payload = parts[1].trim().split(', ')
-    const reward = payload[0]
-    const guess = payload[1]
-    const totalScore = payload[2]
-    const remaining = payload[3]
+    const [reward, guess, totalScore, remaining] = parts[1].trim().split(', ')
     this.informResult(reward, guess, totalScore, remaining)
   }
 
   _handleMessage(message) {
-    console.log(message)
-
     const { text } = message
     if (text && text.match(this.myselfRE)) {
       if (text.match(beginRE)) {

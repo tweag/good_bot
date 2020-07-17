@@ -5,10 +5,14 @@
   "license": "MIT",
   "scripts": {
     "repl": "node -i -e \"$(< index.js)\"",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "jest . --watch"
   },
   "dependencies": {
     "@slack/rtm-api": "^5.0.5",
     "dotenv": "^6.1.0"
+  },
+  "devDependencies": {
+    "jest": "^26.1.0"
   }
 }
