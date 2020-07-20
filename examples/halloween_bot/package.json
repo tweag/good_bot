@@ -1,0 +1,11 @@
+{
+  "name": "halloween-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "repl": "node -i -e \"$(< index.js)\"",
+    "start": "node index.js",
+    "test": "jest . --watch"
+  }
+}
