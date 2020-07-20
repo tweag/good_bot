@@ -5,10 +5,14 @@
   "license": "MIT",
   "scripts": {
     "repl": "node -i -e \"$(< index.js)\"",
-    "start": "node index.js"
+    "start": "node index.js",
+    "bandit": "node -i -e \"$(< bandit.js)\""
   },
   "dependencies": {
+    "@slack/client": "^3.10.0",
     "@slack/rtm-api": "^5.0.5",
-    "dotenv": "^6.1.0"
+    "dotenv": "^6.1.0",
+    "express": "^4.16.4",
+    "nodemon": "^2.0.4"
   }
 }
