@@ -28,23 +28,27 @@ class GuessBot {
     this.myselfRE = new RegExp(id)
   }
 
-  _handleBegin(text) {
+  _handleBegin(text, godBotId) {
     const parts = text.split(beginRE)
     const actionSpace = parts[1].trim().split(', ')
-    this.updateActionSpace(actionSpace)
+    this.handleExplorationSpace(actionSpace, godBotId)
   }
 
   _handleReward(text) {
     const parts = text.split(rewardRE)
     const [reward, guess, totalScore, remaining] = parts[1].trim().split(', ')
-    this.informResult(reward, guess, totalScore, remaining)
+    this.handleReward(reward, guess, totalScore, remaining)
   }
 
   _handleMessage(message) {
     const { text } = message
-    if (text && text.match(this.myselfRE)) {
+    if (message.subtype === 'bot_message') {
+      // The bot/user that is being messaged is not in this channel
+      this.send("Is it possible that bot is not here?")
+
+    } else if (text && text.match(this.myselfRE)) {
       if (text.match(beginRE)) {
-        this._handleBegin(text)
+        this._handleBegin(text, message.user)
       } else if (text.match(rewardRE)) {
         this._handleReward(text)
       }

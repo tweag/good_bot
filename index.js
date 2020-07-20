@@ -1,24 +1,26 @@
 const { GuessBot, startWord, guessWord } = require('./bots/guess_bot.js')
 
-const GOD_BOT_ID = '<@U017GNL24JY>'
+const BANDIT_BOT_ID = '<@U017GNL24JY>'
 
 class MyBot extends GuessBot {
   constructor () {
     super()
+    this.banditBotId = BANDIT_BOT_ID
     this.start()
   }
 
-  updateActionSpace(space) {
+  handleExplorationSpace(space, banditBotId) {
+    if (banditBotId) {
+      this.banditBotId = `<@${banditBotId}>`
+    }
     this.space = space
-    console.log(space)
     this.send(`Wow this is hard, I can guess from any of these choices: ${space.join(', ')}`)
-    this.makeGuess()
+    this.makeGuess(this.space[0])
   }
 
-  informResult (reward, guess, totalScore, remaining) {
-    console.log(reward, guess, totalScore, remaining)
+  handleReward (reward, guess, totalScore, remaining) {
     this.send(
-      `I ${guess}ed and got ${reward} BTC. I have ${remaining} guesses left and I've raked in ${totalScore}`
+      `I ${guess}ed and got ${reward} points. I have ${remaining} guesses left and I've raked in ${totalScore} points`
     )
 
     // This is where your guess logic goes. The idea is to maximize your total points.
@@ -28,11 +30,11 @@ class MyBot extends GuessBot {
   }
 
   makeGuess (guess) {
-    this.send(`${GOD_BOT_ID} ${guessWord} ${this.space[0]}`)
+    this.send(`${this.banditBotId} ${guessWord} ${guess}`)
   }
 
   start () {
-    this.send(`${GOD_BOT_ID} ${startWord}`)
+    this.send(`${this.banditBotId} ${startWord}`)
   }
 }
 
