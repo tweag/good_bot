@@ -9,15 +9,15 @@ class TestBot extends GuessBot {
 
 test('Handles reward message properly', () => {
   const bot = new TestBot()
-  const text = `<@TESTID> You got a response reward 10, jump, 90, 100`
+  const text = `<@TESTID> You got a response reward 10.1, jump, 90.9, 100`
   const user = 'GODBOT'
 
   bot._handleMessage({ text, user })
   expect(bot.handleReward).toBeCalledWith({
-    reward: '10',
+    reward: 10.1,
     guess: 'jump',
-    totalScore: '90',
-    remaining: '100'
+    totalScore: 90.9,
+    remaining: 100
   }, user);
 })
 

@@ -39,9 +39,9 @@ class GuessBot {
     const [reward, guess, totalScore, remaining] = parts[1].trim().split(', ')
     this.handleReward({
       guess,
-      reward,
-      totalScore,
-      remaining
+      reward: parseFloat(reward),
+      totalScore: parseFloat(totalScore),
+      remaining: parseInt(remaining)
     }, godBotId)
   }
 
