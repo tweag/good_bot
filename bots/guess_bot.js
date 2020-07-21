@@ -34,10 +34,15 @@ class GuessBot {
     this.handleExplorationSpace(actionSpace, godBotId)
   }
 
-  _handleReward(text) {
+  _handleReward(text, godBotId) {
     const parts = text.split(rewardRE)
     const [reward, guess, totalScore, remaining] = parts[1].trim().split(', ')
-    this.handleReward(reward, guess, totalScore, remaining)
+    this.handleReward({
+      guess,
+      reward,
+      totalScore,
+      remaining
+    }, godBotId)
   }
 
   _handleMessage(message) {
@@ -50,7 +55,7 @@ class GuessBot {
       if (text.match(beginRE)) {
         this._handleBegin(text, message.user)
       } else if (text.match(rewardRE)) {
-        this._handleReward(text)
+        this._handleReward(text, message.user)
       }
     }
   }

@@ -8,11 +8,17 @@ class TestBot extends GuessBot {
 }
 
 test('Handles reward message properly', () => {
-  const text = `<@TESTID> You got a response reward 10, jump, 90, 100`
   const bot = new TestBot()
+  const text = `<@TESTID> You got a response reward 10, jump, 90, 100`
+  const user = 'GODBOT'
 
-  bot._handleMessage({ text })
-  expect(bot.handleReward).toBeCalledWith('10', 'jump', '90', '100');
+  bot._handleMessage({ text, user })
+  expect(bot.handleReward).toBeCalledWith({
+    reward: '10',
+    guess: 'jump',
+    totalScore: '90',
+    remaining: '100'
+  }, user);
 })
 
 test('Handles begin message properly', () => {

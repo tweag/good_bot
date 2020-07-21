@@ -18,7 +18,7 @@ class MyBot extends GuessBot {
     this.makeGuess(this.space[0])
   }
 
-  handleReward (reward, guess, totalScore, remaining) {
+  handleReward ({reward, guess, totalScore, remaining}, banditBotId) {
     this.send(
       `I ${guess}ed and got ${reward} points. I have ${remaining} guesses left and I've raked in ${totalScore} points`
     )
