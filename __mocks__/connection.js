@@ -7,7 +7,7 @@ class Connection {
 
   send = () => {}
 
-  listen = () => {}
+  onChannelMessage = () => {}
 }
 
 module.exports = Connection

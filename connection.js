@@ -24,7 +24,7 @@ class Connection {
     this.rtm.sendMessage(message, channel)
   }
 
-  listen ({ channel, callback }) {
+  onChannelMessage ({ channel, callback }) {
     this.listeners[channel] = callback
   }
 }

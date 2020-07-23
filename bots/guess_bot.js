@@ -16,7 +16,7 @@ class GuessBot {
   constructor() {
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
     this.connection = new Connection()
-    this.connection.listen({
+    this.connection.onChannelMessage({
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
