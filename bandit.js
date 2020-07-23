@@ -28,22 +28,6 @@ class Bandit {
     this.connection.send({ channel: this.SLACK_CHANNEL, message })
   }
 
-  /**
-   * 
-   * @param {String} text 
-   * @param {Array<String>} words 
-   * @returns {Boolean}
-   */
-  containsAny(text, words) {
-    for (let word of words) {
-      if (text.includes(word)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   sendNoCommandsMessage(message)
   {
     this.send(`<@${message.user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`);
@@ -63,7 +47,7 @@ class Bandit {
     let guess = message.text.replace(`<@${this.botId}>`, "");
     guess = guess.replace("guess", "").trim();
 
-    if (this.containsAny(guess, options)) {
+    if (options.includes(guess)) {
       let reward = playerState.rewards[guess];
       playerState.total += reward;
 
