@@ -3,7 +3,7 @@ const { startRE, guessRE } = require('./bots/guess_bot.js')
 
 var Connection = require('./connection')
 
-const EXPLORATION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
+const ACTION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
 const REWARD_BOUNDS = [-100, 100]
 const NUMBER_OF_MOVES = 25
 
@@ -114,13 +114,13 @@ class BanditBot {
   }
 
   generateInitialState() {
-    const { rewardBounds, explorationSpace, numberOfMoves } = this.config
+    const { rewardBounds, actionSpace, numberOfMoves } = this.config
     const rewards = {}
     const rewardValues = shuffle(
-      linearDistribution(rewardBounds, explorationSpace.length)
+      linearDistribution(rewardBounds, actionSpace.length)
     )
 
-    explorationSpace.forEach((word, index) => {
+    actionSpace.forEach((word, index) => {
       rewards[word] = rewardValues[index]
     })
 
@@ -168,7 +168,7 @@ class BanditBot {
 }
 
 new BanditBot({
-  explorationSpace: EXPLORATION_SPACE,
+  actionSpace: ACTION_SPACE,
   rewardBounds: REWARD_BOUNDS,
   numberOfMoves: NUMBER_OF_MOVES,
 });

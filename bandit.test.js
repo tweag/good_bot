@@ -2,10 +2,10 @@ const { BanditBot, linearDistribution } = require('./bandit')
 
 jest.mock('./connection')
 
-const explorationSpace = ['A', 'B', 'C']
+const actionSpace = ['A', 'B', 'C']
 const rewardBounds = [-100, 100]
 const numberOfMoves = 5
-const bot = new BanditBot({ explorationSpace, rewardBounds, numberOfMoves });
+const bot = new BanditBot({ actionSpace, rewardBounds, numberOfMoves });
 bot.sendStartMessage = jest.fn()
 bot.sendGuessMessage = jest.fn()
 bot.sendNotAGuessMessage = jest.fn()
@@ -24,7 +24,7 @@ beforeEach(() => {
 })
 
 test('Bot does not accept a guess unless the game is started', () => {
-  const guess = explorationSpace[0]
+  const guess = actionSpace[0]
   const text = `<@TESTID> guess ${guess}`
   const user = 'GUESSBOT'
 
@@ -35,12 +35,12 @@ test('Bot does not accept a guess unless the game is started', () => {
 
 test('Bot starts game for user and accepts guesses', () => {
   const user = 'GUESSBOT'
-  const guess = explorationSpace[0]
+  const guess = actionSpace[0]
 
   bot._handleMessage({ text: '<@TESTID> start', user })
   bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user })
 
-  expect(bot.sendStartMessage).toBeCalledWith(user, explorationSpace)
+  expect(bot.sendStartMessage).toBeCalledWith(user, actionSpace)
   expect(bot.sendGuessMessage.mock.calls[0][0]).toBe(user)
   expect(bot.sendGuessMessage.mock.calls[0][1]).toBe(guess)
   expect(bot.sendGuessMessage.mock.calls[0][4]).toBe(numberOfMoves - 1)
@@ -54,13 +54,13 @@ test('Bot does not accept an invalid guess', () => {
   bot._handleMessage({ text: '<@TESTID> start', user })
   bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user })
 
-  expect(bot.sendStartMessage).toBeCalledWith(user, explorationSpace)
-  expect(bot.sendNotAGuessMessage).toBeCalledWith(user, explorationSpace)
+  expect(bot.sendStartMessage).toBeCalledWith(user, actionSpace)
+  expect(bot.sendNotAGuessMessage).toBeCalledWith(user, actionSpace)
 })
 
 test('Bot ends game after correct number of moves', () => {
   const user = 'GUESSBOT'
-  const guess = explorationSpace[0]
+  const guess = actionSpace[0]
   const text = `<@TESTID> guess ${guess}`
 
   bot._handleMessage({ text: '<@TESTID> start', user })
