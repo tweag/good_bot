@@ -5,6 +5,7 @@ var Connection = require('./connection')
 
 const EXPLORATION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
 const REWARD_BOUNDS = [-100, 100]
+const NUMBER_OF_MOVES = 25
 
 function shuffle(array) {
   let currentIndex = array.length, temporaryValue, randomIndex
@@ -36,7 +37,7 @@ function linearDistribution(inclusiveBounds, length) {
 
 
 class BanditBot {
-  constructor() {
+  constructor(config) {
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
 
     this.connection = new Connection()
@@ -47,6 +48,7 @@ class BanditBot {
     this.connection.start().then(this._setBotId)
 
     this.commands = ["start", "guess"];
+    this.config = config
     this.state = {};
   }
 
@@ -58,84 +60,100 @@ class BanditBot {
     this.connection.send({ channel: this.SLACK_CHANNEL, message })
   }
 
-  sendNoCommandsMessage(message)
-  {
-    this.send(`<@${message.user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`);
+  sendNoCommandsMessage(user) {
+    this.send(`<@${user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`);
   }
 
-  sendStartMessage(message) {
-    let options = Object.keys(this.state[message.user].rewards).join(", ");
-    this.send(`<@${message.user}> You've started a game.
+  sendNotStartedMessage(user) {
+    this.send(`<@${user}> You didn't start a game!
+      \ Start a game by writing \`<@${this.botId}> start\``);
+  }
+
+  sendStartMessage(user, options) {
+    this.send(`<@${user}> You've started a game.
       \ Your options are ${options}.
       \ Attempt a guess by writing \`<@${this.botId}> guess {option}\`\n
       \ begin ${options}`);
   }
 
-  sendGuessMessage(message) {
-    let options = Object.keys(this.state[message.user].rewards);
-    let playerState = this.state[message.user];
-    let guess = message.text.replace(`<@${this.botId}>`, "");
-    guess = guess.replace("guess", "").trim();
+  sendGuessMessage(user, guess, reward, total, moves) {
+    this.send(`<@${user}> You guessed "${guess}".
+      \ Reward: ${reward}.
+      \ Total Score: ${total}.
+      \ Moves Remianing: ${moves}\n
+      \ reward ${reward}, ${guess}, ${total}, ${moves}`)
+  }
 
-    if (options.includes(guess)) {
-      let reward = playerState.rewards[guess];
-      playerState.total += reward;
+  sendGameOverMessage(user, total) {
+      this.send(`<@${user}> Game over.
+        \ Your score was: ${total}`);
+  }
 
-      this.send(`<@${message.user}> You guessed "${guess}".
-        \ Reward: ${reward}. 
-        \ Total Score: ${playerState.total}. 
-        \ Moves Remianing: ${--playerState.moves}\n
-        \ reward ${reward}, ${guess}, ${playerState.total}, ${playerState.moves}`)
+  sendNotAGuessMessage(user, options) {
+    this.send(`<@${user}> You didn't take a possible action.
+      \ Your options are ${options.join(", ")}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
+  }
 
-      if (playerState.moves <= 0) {
-        delete this.state[message.user];
-        this.send(`<@${message.user}> Game over.
-          \ Your score was: ${playerState.total}`);
-      }
-    }
+  makeGuess(user, guess, options) {
+    let playerState = this.state[user];
+    let reward = playerState.rewards[guess];
+    playerState.total += reward
+    playerState.moves -= 1
 
-    else {
-      this.send(`<@${message.user}> You didn't take a possible action.
-        \ Your options are ${options.join(", ")}.
-        \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
+    this.sendGuessMessage(user, guess, reward, playerState.total, playerState.moves)
+
+    if (playerState.moves <= 0) {
+      this.resetGame(user)
+      this.sendGameOverMessage(user, playerState.total)
     }
   }
 
-  generateRewards() {
+  resetGame(user) {
+    delete this.state[user];
+  }
+
+  generateInitialState() {
+    const { rewardBounds, explorationSpace, numberOfMoves } = this.config
     const rewards = {}
     const rewardValues = shuffle(
-      linearDistribution(REWARD_BOUNDS, EXPLORATION_SPACE.length)
+      linearDistribution(rewardBounds, explorationSpace.length)
     )
 
-    EXPLORATION_SPACE.forEach((word, index) => {
+    explorationSpace.forEach((word, index) => {
       rewards[word] = rewardValues[index]
     })
 
-    return rewards;
+    return {
+      total: 0,
+      moves: numberOfMoves,
+      rewards,
+    }
   }
 
   handleDirectedMessage(message) {
-    const { text } = message
+    const { text, user } = message
 
     if (text.match(startRE)) {
-      this.state[message.user] = {
-        total: 0,
-        moves: 25,
-        rewards: this.generateRewards()
-      }
-
-      this.sendStartMessage(message);
+      const userState = this.generateInitialState()
+      this.state[user] = userState
+      this.sendStartMessage(user, Object.keys(userState.rewards));
     } else if (text.match(guessRE)) {
-      if (this.state[message.user]) {
-        this.sendGuessMessage(message);
-      }
+      const userState = this.state[user]
+      if (userState) {
+        const guess = text.split(guessRE)[1].trim()
+        const options = Object.keys(userState.rewards)
 
-      else {
-        this.send(`<@${message.user}> You didn't start a game!
-          \ Start a game by writing \`<@${this.botId}> start\``);
+        if (options.includes(guess)) {
+          this.makeGuess(user, guess, options)
+        } else {
+          this.sendNotAGuessMessage(user, options)
+        }
+      } else {
+        this.sendNotStartedMessage(user)
       }
     } else {
-      this.sendNoCommandsMessage(message);
+      this.sendNoCommandsMessage(user);
     }
   }
 
@@ -149,6 +167,14 @@ class BanditBot {
   }
 }
 
-new BanditBot();
+new BanditBot({
+  explorationSpace: EXPLORATION_SPACE,
+  rewardBounds: REWARD_BOUNDS,
+  numberOfMoves: NUMBER_OF_MOVES,
+});
 
-module.exports = { BanditBot, shuffle, linearDistribution }
+module.exports = {
+  BanditBot,
+  shuffle,
+  linearDistribution,
+}
