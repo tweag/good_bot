@@ -44,11 +44,11 @@ class BanditGame {
     this.state = {}
   }
 
-  getState(user) {
-    return this.state[user]
+  getState(gameId) {
+    return this.state[gameId]
   }
 
-  getUserActions(state) {
+  getActions(state) {
     return Object.keys(state.rewards)
   }
 
@@ -70,26 +70,26 @@ class BanditGame {
     }
   }
 
-  resetGame(user) {
-    delete this.state[user];
+  resetGame(gameId) {
+    delete this.state[gameId];
   }
 
-  startGame(user) {
+  startGame(gameId) {
     const state = this.generateInitialState()
-    const actions = this.getUserActions(state)
-    this.state[user] = state
+    const actions = this.getActions(state)
+    this.state[gameId] = state
     return { state, actions }
   }
 
-  makeGuess(user, guess) {
-    const state = this.state[user];
+  makeGuess(gameId, guess) {
+    const state = this.state[gameId];
 
     if (!state) {
       return { error: NOT_STARTED }
     }
 
-    if (!this.getUserActions(state).includes(guess)) {
-      return { error: UNAVAILABLE_ACTION, actions: this.getUserActions(state) }
+    if (!this.getActions(state).includes(guess)) {
+      return { error: UNAVAILABLE_ACTION, actions: this.getActions(state) }
     }
 
     const reward = state.rewards[guess];
@@ -98,11 +98,11 @@ class BanditGame {
       total: state.total + reward,
       moves: state.moves - 1,
     }
-    this.state[user] = newState
+    this.state[gameId] = newState
 
     let ended = false
     if (newState.moves <= 0) {
-      this.resetGame(user)
+      this.resetGame(gameId)
       ended = true
     }
 
@@ -171,14 +171,16 @@ class BanditBot {
 
   _handleMessage(message) {
     const { text, user } = message
+    const channel = 'boo'
+    const gameId = `${user}:${channel}`
 
     if (text.match(startRE)) {
-      const { actions } = this.game.startGame(user)
+      const { actions } = this.game.startGame(gameId)
       this.sendStartMessage(user, actions);
 
     } else if (text.match(guessRE)) {
       const guess = text.split(guessRE)[1].trim()
-      const { error, actions, state, reward, ended } = this.game.makeGuess(user, guess)
+      const { error, actions, state, reward, ended } = this.game.makeGuess(gameId, guess)
 
       if (error === NOT_STARTED) {
         this.sendNotStartedMessage(user)
