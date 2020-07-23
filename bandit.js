@@ -41,7 +41,7 @@ class BanditBot {
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
 
     this.connection = new Connection()
-    this.connection.onChannelMessage({
+    this.connection.onChannelMention({
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
@@ -131,7 +131,7 @@ class BanditBot {
     }
   }
 
-  handleDirectedMessage(message) {
+  _handleMessage(message) {
     const { text, user } = message
 
     if (text.match(startRE)) {
@@ -154,15 +154,6 @@ class BanditBot {
       }
     } else {
       this.sendNoCommandsMessage(user);
-    }
-  }
-
-  _handleMessage(message) {
-    // NOTE: Be very careful here. If the botId is not checked for properly
-    // it will result in an infinite loop.
-    if (message.text.includes(`<@${this.botId}>`) && message.user != this.botId)
-    {
-      this.handleDirectedMessage(message);
     }
   }
 }
