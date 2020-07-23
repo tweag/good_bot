@@ -1,4 +1,5 @@
 require('dotenv').config({silent: true})
+const { startRE, guessRE } = require('./bots/guess_bot.js')
 
 var Connection = require('./connection')
 
@@ -99,15 +100,9 @@ class Bandit {
   }
 
   handleDirectedMessage(message) {
-    let messageContents = message.text.replace(`@<${this.botId}>`, "");
+    const { text } = message
 
-    if (!this.containsAny(messageContents, this.commands))
-    {
-      this.sendNoCommandsMessage(message);
-    }
-
-    else if (this.containsAny(messageContents, ["start"]))
-    {
+    if (text.match(startRE)) {
       this.state[message.user] = {
         total: 0,
         moves: 25,
@@ -115,10 +110,7 @@ class Bandit {
       }
 
       this.sendStartMessage(message);
-    }
-
-    else if (this.containsAny(messageContents, ["guess"]))
-    {
+    } else if (text.match(guessRE)) {
       if (this.state[message.user]) {
         this.sendGuessMessage(message);
       }
@@ -127,6 +119,8 @@ class Bandit {
         this.send(`<@${message.user}> You didn't start a game!
           \ Start a game by writing \`<@${this.botId}> start\``);
       }
+    } else {
+      this.sendNoCommandsMessage(message);
     }
   }
 
