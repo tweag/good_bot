@@ -112,11 +112,8 @@ class BanditGame {
 
 class BanditBot {
   constructor(config) {
-    this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
-
     this.connection = new Connection()
-    this.connection.onChannelMention({
-      channel: this.SLACK_CHANNEL,
+    this.connection.onMention({
       callback: this._handleMessage.bind(this),
     })
     this.connection.start().then(this._setBotId)
@@ -130,78 +127,86 @@ class BanditBot {
     this.botId = id
   }
 
-  send(message) {
-    this.connection.send({ channel: this.SLACK_CHANNEL, message })
+  send(message, channel) {
+    this.connection.send({ channel, message })
   }
 
-  sendNoCommandsMessage(user) {
-    this.send(`<@${user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`);
+  sendNoCommandsMessage(user, channel) {
+    const message = `<@${user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`
+    this.send(message, channel)
   }
 
-  sendNotStartedMessage(user) {
-    this.send(`<@${user}> You didn't start a game!
-      \ Start a game by writing \`<@${this.botId}> start\``);
+  sendNotStartedMessage(user, channel) {
+    const message = `<@${user}> You didn't start a game!
+      \ Start a game by writing \`<@${this.botId}> start\``
+    this.send(message, channel)
   }
 
-  sendStartMessage(user, options) {
-    this.send(`<@${user}> You've started a game.
-      \ Your options are ${options}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\`\n
-      \ begin ${options}`);
+  sendStartMessage(user, channel, { actions }) {
+    const message = `<@${user}> You've started a game.
+      \ Your actions are ${actions}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\`\n
+      \ begin ${actions}`
+
+    this.send(message, channel)
   }
 
-  sendGuessMessage(user, guess, reward, total, moves) {
-    this.send(`<@${user}> You guessed "${guess}".
+  sendGuessMessage(user, channel, { guess, reward, total, moves }) {
+    const message = `<@${user}> You guessed "${guess}".
       \ Reward: ${reward}.
       \ Total Score: ${total}.
       \ Moves Remaining: ${moves}\n
-      \ reward ${reward}, ${guess}, ${total}, ${moves}`)
+      \ reward ${reward}, ${guess}, ${total}, ${moves}`
+
+    this.send(message, channel)
   }
 
-  sendGameOverMessage(user, total) {
-      this.send(`<@${user}> Game over.
-        \ Your score was: ${total}`);
+  sendGameOverMessage(user, channel, { total }) {
+    const message = `<@${user}> Game over.
+      \ Your score was: ${total}`
+
+    this.send(message, channel)
   }
 
-  sendNotAGuessMessage(user, options) {
-    this.send(`<@${user}> You didn't take a possible action.
-      \ Your options are ${options.join(", ")}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
+  sendNotAGuessMessage(user, channel, { actions }) {
+    const message = `<@${user}> You didn't take a possible action.
+      \ Your actions are ${actions.join(", ")}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\``
+
+    this.send(message, channel)
   }
 
   _handleMessage(message) {
-    const { text, user } = message
-    const channel = 'boo'
+    const { text, user, channel } = message
     const gameId = `${user}:${channel}`
 
     if (text.match(startRE)) {
       const { actions } = this.game.startGame(gameId)
-      this.sendStartMessage(user, actions);
+      this.sendStartMessage(user, channel, { actions });
 
     } else if (text.match(guessRE)) {
       const guess = text.split(guessRE)[1].trim()
       const { error, actions, state, reward, ended } = this.game.makeGuess(gameId, guess)
 
       if (error === NOT_STARTED) {
-        this.sendNotStartedMessage(user)
+        this.sendNotStartedMessage(user, channel)
       } else if (error === UNAVAILABLE_ACTION) {
-        this.sendNotAGuessMessage(user, actions)
+        this.sendNotAGuessMessage(user, channel, { actions })
       } else {
-        this.sendGuessMessage(
-          user,
+        this.sendGuessMessage(user, channel, {
           guess,
           reward,
-          state.total,
-          state.moves
-        )
+          total: state.total,
+          moves: state.moves
+        })
       }
 
       if (ended) {
-        this.sendGameOverMessage(user, state.total)
+        this.sendGameOverMessage(user, channel, { total: state.total })
       }
 
     } else {
-      this.sendNoCommandsMessage(user);
+      this.sendNoCommandsMessage(user, channel);
     }
   }
 }

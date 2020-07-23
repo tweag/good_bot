@@ -2,12 +2,14 @@ const { BanditBot, linearDistribution } = require('./bandit')
 
 jest.mock('./connection')
 
-const actionSpace = ['A', 'B', 'C']
+const actions = ['A', 'B', 'C']
 const rewardBounds = [-100, 100]
 const numberOfMoves = 5
 
 const user = 'GUESSBOT'
-const bot = new BanditBot({ actionSpace, rewardBounds, numberOfMoves });
+const channel = 'BOTSTUFF'
+const gameId = 'GUESSBOT:BOTSTUFF'
+const bot = new BanditBot({ actionSpace: actions, rewardBounds, numberOfMoves });
 bot.sendStartMessage = jest.fn()
 bot.sendGuessMessage = jest.fn()
 bot.sendNotAGuessMessage = jest.fn()
@@ -22,34 +24,40 @@ beforeEach(() => {
   bot.sendNotStartedMessage.mockReset()
   bot.sendNoCommandsMessage.mockReset()
   bot.sendGameOverMessage.mockReset()
-  bot.game.resetGame(user)
+  bot.game.resetGame(gameId)
 })
 
 test('Bot does not accept a guess unless the game is started', () => {
-  const guess = actionSpace[0]
+  const guess = actions[0]
   const text = `<@TESTID> guess ${guess}`
 
-  bot._handleMessage({ text, user })
+  bot._handleMessage({ text, user, channel })
 
-  expect(bot.sendNotStartedMessage).toBeCalledWith(user)
+  expect(bot.sendNotStartedMessage).toBeCalledWith(user, channel)
 })
 
 test('Bot starts game for user and accepts guesses', () => {
-  const guess = actionSpace[0]
+  const guess = actions[0]
 
-  bot._handleMessage({ text: '<@TESTID> start', user })
-  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user })
+  bot._handleMessage({ text: '<@TESTID> start', user, channel })
+  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user, channel })
 
-  expect(bot.sendStartMessage).toBeCalledWith(user, actionSpace)
+  expect(bot.sendStartMessage).toBeCalledWith(user, channel, { actions })
   expect(bot.sendGuessMessage.mock.calls[0][0]).toBe(user)
-  expect(bot.sendGuessMessage.mock.calls[0][1]).toBe(guess)
-  expect(bot.sendGuessMessage.mock.calls[0][4]).toBe(numberOfMoves - 1)
+  expect(bot.sendGuessMessage.mock.calls[0][1]).toBe(channel)
+  expect(bot.sendGuessMessage.mock.calls[0][2].guess).toBe(guess)
+  expect(bot.sendGuessMessage.mock.calls[0][2].moves).toBe(numberOfMoves - 1)
   expect(bot.sendNotStartedMessage).toHaveBeenCalledTimes(0)
 })
 
 test('Tests are reseting state', () => {
-  const state = bot.game.getState(user)
-  expect(state).toBeUndefined()
+  const state1 = bot.game.getState(gameId)
+  expect(state1).toBeUndefined()
+
+  bot._handleMessage({ text: '<@TESTID> start', user, channel })
+
+  const state2 = bot.game.getState(gameId)
+  expect(state2).toBeDefined()
 })
 
 
@@ -57,15 +65,15 @@ test('Bot does not accept an invalid guess', () => {
   const guess = 'DEFINITELY_NEVER_USE_THIS_AS_A_POSSIBLE_GUESS'
   const text = `<@TESTID> guess ${guess}`
 
-  bot._handleMessage({ text: '<@TESTID> start', user })
-  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user })
+  bot._handleMessage({ text: '<@TESTID> start', user, channel })
+  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user, channel })
 
-  expect(bot.sendStartMessage).toBeCalledWith(user, actionSpace)
-  expect(bot.sendNotAGuessMessage).toBeCalledWith(user, actionSpace)
+  expect(bot.sendStartMessage).toBeCalledWith(user, channel, { actions })
+  expect(bot.sendNotAGuessMessage).toBeCalledWith(user, channel, { actions })
 })
 
 test('Bot ends game after correct number of moves', () => {
-  const guess = actionSpace[0]
+  const guess = actions[0]
   const text = `<@TESTID> guess ${guess}`
 
   bot._handleMessage({ text: '<@TESTID> start', user })
@@ -76,6 +84,18 @@ test('Bot ends game after correct number of moves', () => {
   }
 
   expect(bot.sendGameOverMessage).toHaveBeenCalled()
+})
+
+test('Bot tracks two different games in different channels', () => {
+  const guess = actions[0]
+  const channel1 = 'BOTSTUFF'
+  const channel2 = 'SECRETBOTSTUFF'
+
+  bot._handleMessage({ text: '<@TESTID> start', user, channel: channel1 })
+  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user, channel: channel1 })
+
+  bot._handleMessage({ text: `<@TESTID> guess ${guess}`, user, channel: channel2 })
+  expect(bot.sendNotStartedMessage).toBeCalledWith(user, channel2)
 })
 
 test('Linear distribution', () => {
