@@ -5,20 +5,22 @@ var Connection = require('./connection')
 
 class Bandit {
   constructor() {
-    // NOTE: Be very careful here. If all references to SLACK_ID are not accounted for
-    // it will result in an infinite loop.
-    this.SLACK_ID = "<@U017GNL24JY>"
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
-    this.TOKEN = process.env.TOKEN
 
-    this.connection = new Connection({ token: this.TOKEN })
+    this.connection = new Connection()
     this.connection.listen({
       channel: this.SLACK_CHANNEL,
       callback: this.handleMessage.bind(this),
     })
+    this.connection.start().then(this._setBotId)
 
     this.commands = ["start", "guess"];
     this.state = {};
+  }
+
+  _setBotId = (id) => {
+    console.log(id)
+    this.botId = id
   }
 
   send(message) {
@@ -49,15 +51,15 @@ class Bandit {
   sendStartMessage(message) {
     let options = Object.keys(this.state[message.user].rewards).join(", ");
     this.send(`<@${message.user}> You've started a game.
-      \ Your options are ${options}. 
-      \ Attempt a guess by writing \`${this.SLACK_ID} guess {option}\`\n
+      \ Your options are ${options}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\`\n
       \ begin ${options}`);
   }
 
   sendGuessMessage(message) {
     let options = Object.keys(this.state[message.user].rewards);
     let playerState = this.state[message.user];
-    let guess = message.text.replace(this.SLACK_ID, "");
+    let guess = message.text.replace(`<@${this.botId}>`, "");
     guess = guess.replace("guess", "").trim();
 
     if (this.containsAny(guess, options)) {
@@ -79,8 +81,8 @@ class Bandit {
 
     else {
       this.send(`<@${message.user}> You didn't take a possible action.
-        \ Your options are ${options.join(", ")}. 
-        \ Attempt a guess by writing \`${this.SLACK_ID} guess {option}\``);
+        \ Your options are ${options.join(", ")}.
+        \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
     }
   }
 
@@ -97,7 +99,7 @@ class Bandit {
   }
 
   handleDirectedMessage(message) {
-    let messageContents = message.text.replace(this.SLACK_ID, "");
+    let messageContents = message.text.replace(`@<${this.botId}>`, "");
 
     if (!this.containsAny(messageContents, this.commands))
     {
@@ -123,15 +125,15 @@ class Bandit {
 
       else {
         this.send(`<@${message.user}> You didn't start a game!
-          \ Start a game by writing \`${this.SLACK_ID} start\``);
+          \ Start a game by writing \`<@${this.botId}> start\``);
       }
     }
   }
 
   handleMessage(message) {
-    // NOTE: Be very careful here. If the SLACK_ID is not checked for properly
+    // NOTE: Be very careful here. If the botId is not checked for properly
     // it will result in an infinite loop.
-    if (message.text.includes(this.SLACK_ID) && `<@${message.user}>` != this.SLACK_ID)
+    if (message.text.includes(`<@${this.botId}>`) && message.user != this.botId)
     {
       this.handleDirectedMessage(message);
     }
