@@ -3,15 +3,46 @@ const { startRE, guessRE } = require('./bots/guess_bot.js')
 
 var Connection = require('./connection')
 
+const EXPLORATION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
+const REWARD_BOUNDS = [-100, 100]
 
-class Bandit {
+function shuffle(array) {
+  let currentIndex = array.length, temporaryValue, randomIndex
+
+  while (0 !== currentIndex) {
+    randomIndex = Math.floor(Math.random() * currentIndex)
+    currentIndex -= 1
+
+    temporaryValue = array[currentIndex]
+    array[currentIndex] = array[randomIndex]
+    array[randomIndex] = temporaryValue
+  }
+
+  return array
+}
+
+function linearDistribution(inclusiveBounds, length) {
+  const [lowBound, highBound] = inclusiveBounds
+  const spacing = (highBound - lowBound) / (length - 1)
+
+  let currentIndex = 0
+  let rewardValues = []
+  while (length !== currentIndex) {
+    rewardValues.push(spacing * currentIndex + lowBound)
+    currentIndex += 1
+  }
+  return rewardValues
+}
+
+
+class BanditBot {
   constructor() {
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
 
     this.connection = new Connection()
     this.connection.listen({
       channel: this.SLACK_CHANNEL,
-      callback: this.handleMessage.bind(this),
+      callback: this._handleMessage.bind(this),
     })
     this.connection.start().then(this._setBotId)
 
@@ -20,7 +51,6 @@ class Bandit {
   }
 
   _setBotId = (id) => {
-    console.log(id)
     this.botId = id
   }
 
@@ -72,13 +102,14 @@ class Bandit {
   }
 
   generateRewards() {
-    let words = ["A", "B", "C", "D", "E"];
-    let rewards = {};
+    const rewards = {}
+    const rewardValues = shuffle(
+      linearDistribution(REWARD_BOUNDS, EXPLORATION_SPACE.length)
+    )
 
-    for (let word of words) {
-      // Random number between -5..5
-      rewards[word] = Math.random() * 10 - 5;
-    }
+    EXPLORATION_SPACE.forEach((word, index) => {
+      rewards[word] = rewardValues[index]
+    })
 
     return rewards;
   }
@@ -108,7 +139,7 @@ class Bandit {
     }
   }
 
-  handleMessage(message) {
+  _handleMessage(message) {
     // NOTE: Be very careful here. If the botId is not checked for properly
     // it will result in an infinite loop.
     if (message.text.includes(`<@${this.botId}>`) && message.user != this.botId)
@@ -118,4 +149,6 @@ class Bandit {
   }
 }
 
-new Bandit();
+new BanditBot();
+
+module.exports = { BanditBot, shuffle, linearDistribution }
