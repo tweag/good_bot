@@ -5,6 +5,8 @@ jest.mock('./connection')
 const actionSpace = ['A', 'B', 'C']
 const rewardBounds = [-100, 100]
 const numberOfMoves = 5
+
+const user = 'GUESSBOT'
 const bot = new BanditBot({ actionSpace, rewardBounds, numberOfMoves });
 bot.sendStartMessage = jest.fn()
 bot.sendGuessMessage = jest.fn()
@@ -20,13 +22,12 @@ beforeEach(() => {
   bot.sendNotStartedMessage.mockReset()
   bot.sendNoCommandsMessage.mockReset()
   bot.sendGameOverMessage.mockReset()
-  bot.game.resetGame()
+  bot.game.resetGame(user)
 })
 
 test('Bot does not accept a guess unless the game is started', () => {
   const guess = actionSpace[0]
   const text = `<@TESTID> guess ${guess}`
-  const user = 'GUESSBOT'
 
   bot._handleMessage({ text, user })
 
@@ -34,7 +35,6 @@ test('Bot does not accept a guess unless the game is started', () => {
 })
 
 test('Bot starts game for user and accepts guesses', () => {
-  const user = 'GUESSBOT'
   const guess = actionSpace[0]
 
   bot._handleMessage({ text: '<@TESTID> start', user })
@@ -44,10 +44,16 @@ test('Bot starts game for user and accepts guesses', () => {
   expect(bot.sendGuessMessage.mock.calls[0][0]).toBe(user)
   expect(bot.sendGuessMessage.mock.calls[0][1]).toBe(guess)
   expect(bot.sendGuessMessage.mock.calls[0][4]).toBe(numberOfMoves - 1)
+  expect(bot.sendNotStartedMessage).toHaveBeenCalledTimes(0)
 })
 
+test('Tests are reseting state', () => {
+  const state = bot.game.getState(user)
+  expect(state).toBeUndefined()
+})
+
+
 test('Bot does not accept an invalid guess', () => {
-  const user = 'GUESSBOT'
   const guess = 'DEFINITELY_NEVER_USE_THIS_AS_A_POSSIBLE_GUESS'
   const text = `<@TESTID> guess ${guess}`
 
@@ -59,7 +65,6 @@ test('Bot does not accept an invalid guess', () => {
 })
 
 test('Bot ends game after correct number of moves', () => {
-  const user = 'GUESSBOT'
   const guess = actionSpace[0]
   const text = `<@TESTID> guess ${guess}`
 
