@@ -20,7 +20,7 @@ beforeEach(() => {
   bot.sendNotStartedMessage.mockReset()
   bot.sendNoCommandsMessage.mockReset()
   bot.sendGameOverMessage.mockReset()
-  bot.resetGame()
+  bot.game.resetGame()
 })
 
 test('Bot does not accept a guess unless the game is started', () => {

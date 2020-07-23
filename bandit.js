@@ -35,6 +35,80 @@ function linearDistribution(inclusiveBounds, length) {
   return rewardValues
 }
 
+const NOT_STARTED = "NOT_STARTED"
+const UNAVAILABLE_ACTION = "UNAVAILABLE_ACTION"
+
+class BanditGame {
+  constructor (config) {
+    this.config = config
+    this.state = {}
+  }
+
+  getState(user) {
+    return this.state[user]
+  }
+
+  getUserActions(state) {
+    return Object.keys(state.rewards)
+  }
+
+  generateInitialState() {
+    const { rewardBounds, actionSpace, numberOfMoves } = this.config
+    const rewards = {}
+    const rewardValues = shuffle(
+      linearDistribution(rewardBounds, actionSpace.length)
+    )
+
+    actionSpace.forEach((word, index) => {
+      rewards[word] = rewardValues[index]
+    })
+
+    return {
+      total: 0,
+      moves: numberOfMoves,
+      rewards,
+    }
+  }
+
+  resetGame(user) {
+    delete this.state[user];
+  }
+
+  startGame(user) {
+    const state = this.generateInitialState()
+    const actions = this.getUserActions(state)
+    this.state[user] = state
+    return { state, actions }
+  }
+
+  makeGuess(user, guess) {
+    const state = this.state[user];
+
+    if (!state) {
+      return { error: NOT_STARTED }
+    }
+
+    if (!this.getUserActions(state).includes(guess)) {
+      return { error: UNAVAILABLE_ACTION, actions: this.getUserActions(state) }
+    }
+
+    const reward = state.rewards[guess];
+    const newState = {
+      ...state,
+      total: state.total + reward,
+      moves: state.moves - 1,
+    }
+    this.state[user] = newState
+
+    let ended = false
+    if (newState.moves <= 0) {
+      this.resetGame(user)
+      ended = true
+    }
+
+    return { error: null, state: newState, guess, reward, ended }
+  }
+}
 
 class BanditBot {
   constructor(config) {
@@ -47,9 +121,9 @@ class BanditBot {
     })
     this.connection.start().then(this._setBotId)
 
+    this.game = new BanditGame(config)
+
     this.commands = ["start", "guess"];
-    this.config = config
-    this.state = {};
   }
 
   _setBotId = (id) => {
@@ -95,63 +169,35 @@ class BanditBot {
       \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
   }
 
-  makeGuess(user, guess, options) {
-    let playerState = this.state[user];
-    let reward = playerState.rewards[guess];
-    playerState.total += reward
-    playerState.moves -= 1
-
-    this.sendGuessMessage(user, guess, reward, playerState.total, playerState.moves)
-
-    if (playerState.moves <= 0) {
-      this.resetGame(user)
-      this.sendGameOverMessage(user, playerState.total)
-    }
-  }
-
-  resetGame(user) {
-    delete this.state[user];
-  }
-
-  generateInitialState() {
-    const { rewardBounds, actionSpace, numberOfMoves } = this.config
-    const rewards = {}
-    const rewardValues = shuffle(
-      linearDistribution(rewardBounds, actionSpace.length)
-    )
-
-    actionSpace.forEach((word, index) => {
-      rewards[word] = rewardValues[index]
-    })
-
-    return {
-      total: 0,
-      moves: numberOfMoves,
-      rewards,
-    }
-  }
-
   _handleMessage(message) {
     const { text, user } = message
 
     if (text.match(startRE)) {
-      const userState = this.generateInitialState()
-      this.state[user] = userState
-      this.sendStartMessage(user, Object.keys(userState.rewards));
-    } else if (text.match(guessRE)) {
-      const userState = this.state[user]
-      if (userState) {
-        const guess = text.split(guessRE)[1].trim()
-        const options = Object.keys(userState.rewards)
+      const { actions } = this.game.startGame(user)
+      this.sendStartMessage(user, actions);
 
-        if (options.includes(guess)) {
-          this.makeGuess(user, guess, options)
-        } else {
-          this.sendNotAGuessMessage(user, options)
-        }
-      } else {
+    } else if (text.match(guessRE)) {
+      const guess = text.split(guessRE)[1].trim()
+      const { error, actions, state, reward, ended } = this.game.makeGuess(user, guess)
+
+      if (error === NOT_STARTED) {
         this.sendNotStartedMessage(user)
+      } else if (error === UNAVAILABLE_ACTION) {
+        this.sendNotAGuessMessage(user, actions)
+      } else {
+        this.sendGuessMessage(
+          user,
+          guess,
+          reward,
+          state.total,
+          state.moves
+        )
       }
+
+      if (ended) {
+        this.sendGameOverMessage(user, state.total)
+      }
+
     } else {
       this.sendNoCommandsMessage(user);
     }
