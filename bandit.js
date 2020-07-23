@@ -29,7 +29,7 @@ function linearDistribution(inclusiveBounds, length) {
   let currentIndex = 0
   let rewardValues = []
   while (length !== currentIndex) {
-    rewardValues.push(spacing * currentIndex + lowBound)
+    rewardValues.push(Math.floor(spacing * currentIndex + lowBound))
     currentIndex += 1
   }
   return rewardValues
@@ -80,7 +80,7 @@ class BanditBot {
     this.send(`<@${user}> You guessed "${guess}".
       \ Reward: ${reward}.
       \ Total Score: ${total}.
-      \ Moves Remianing: ${moves}\n
+      \ Moves Remaining: ${moves}\n
       \ reward ${reward}, ${guess}, ${total}, ${moves}`)
   }
 
