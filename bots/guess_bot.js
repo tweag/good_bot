@@ -33,7 +33,7 @@ class GuessBot {
   _handleBegin(text, godBotId) {
     const parts = text.split(beginRE)
     const actionSpace = parts[1].trim().split(', ')
-    this.handleExplorationSpace(actionSpace, godBotId)
+    this.handleGameStart(actionSpace, godBotId)
   }
 
   _handleReward(text, godBotId) {

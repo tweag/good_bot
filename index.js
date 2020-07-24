@@ -9,12 +9,12 @@ class MyBot extends GuessBot {
     this.start()
   }
 
-  handleExplorationSpace(space, banditBotId) {
+  handleGameStart(actionSpace, banditBotId) {
     if (banditBotId) {
       this.banditBotId = `<@${banditBotId}>`
     }
-    this.space = space
-    this.send(`Wow this is hard, what should I choose? ${space.join(', ')}`)
+    this.space = actionSpace
+    this.send(`Wow this is hard, what should I choose? ${this.space.join(', ')}`)
     this.makeGuess(this.space[0])
   }
 
