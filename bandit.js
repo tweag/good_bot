@@ -1,3 +1,4 @@
+const http = require('http');
 const { BanditBot } = require('./bots/bandit_bot')
 
 const ACTION_SPACE = [
@@ -19,3 +20,13 @@ new BanditBot({
   numberOfMoves: NUMBER_OF_MOVES,
 });
 
+// Heroku needs us to listen on a port in order to keep the service running
+const port = process.env.PORT || 3000
+const server = http.createServer((_, response) => {
+  response.setHeader('Content-Type', 'text/plain; charset=UTF-8');
+  response.end('THIS BOT IS A GOOD BOT')
+})
+
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
