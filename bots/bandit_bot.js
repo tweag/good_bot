@@ -1,5 +1,5 @@
 require('dotenv').config({silent: true})
-const { startRE, guessRE } = require('./guess_bot.js')
+const { startRE, guessRE, endWord } = require('./guess_bot.js')
 
 var Connection = require('../connection')
 
@@ -159,7 +159,9 @@ class BanditBot {
 
   sendGameOverMessage(user, channel, { total }) {
     const message = `<@${user}> Game over.
-      \ Your score was: ${total}`
+      \ Your score was: ${total}
+      \ ${endWord} ${total}`
+
 
     this.send(message, channel)
   }

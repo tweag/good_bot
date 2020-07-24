@@ -6,11 +6,14 @@ const startWord = 'start'
 const guessWord = 'guess'
 const beginWord = 'begin'
 const rewardWord = 'reward'
+const endWord = 'gameover'
+
 
 const startRE = new RegExp(startWord)
 const guessRE = new RegExp(guessWord)
 const beginRE = new RegExp(beginWord)
 const rewardRE = new RegExp(rewardWord)
+const endRE = new RegExp(endWord)
 
 class GuessBot {
   constructor() {
@@ -44,6 +47,14 @@ class GuessBot {
     }, godBotId)
   }
 
+  _handleEnd(text, godBotId) {
+    const parts = text.split(endRE)
+    const totalScore = parts[1].trim()
+    this.handleGameOver({
+      totalScore: parseFloat(totalScore),
+    }, godBotId)
+  }
+
   _handleMessage(message) {
     // Ephemeral messages can mean that we just mentioned someone
     // who is not in this channel
@@ -58,6 +69,8 @@ class GuessBot {
       this._handleBegin(text, message.user)
     } else if (text.match(rewardRE)) {
       this._handleReward(text, message.user)
+    } else if (text.match(endRE)) {
+      this._handleEnd(text, message.user)
     }
   }
 

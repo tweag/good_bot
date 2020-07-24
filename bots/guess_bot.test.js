@@ -5,6 +5,7 @@ jest.mock('../connection')
 class TestBot extends GuessBot {
   handleReward = jest.fn()
   handleExplorationSpace = jest.fn()
+  handleGameOver = jest.fn()
 }
 
 test('Handles reward message properly', () => {
@@ -29,4 +30,14 @@ test('Handles begin message properly', () => {
 
   bot._handleMention({ text, user })
   expect(bot.handleExplorationSpace).toBeCalledWith(expectedSpace, user);
+})
+
+test('Handles begin message properly', () => {
+  const bot = new TestBot()
+  const text = `<@TESTID> Game Over! gameover 1000`
+  const user = 'GODBOT'
+  const expectedTotal = 1000
+
+  bot._handleMention({ text, user })
+  expect(bot.handleGameOver).toBeCalledWith({ totalScore: expectedTotal });
 })
