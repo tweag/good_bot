@@ -3,7 +3,16 @@ const { startRE, guessRE } = require('./bots/guess_bot.js')
 
 var Connection = require('./connection')
 
-const ACTION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
+const ACTION_SPACE = [
+  'attack',
+  'hack',
+  'sack',
+  'sidetrack',
+  'pack',
+  'smack',
+  'whack',
+  'hijack',
+]
 const REWARD_BOUNDS = [-100, 100]
 const NUMBER_OF_MOVES = 25
 
