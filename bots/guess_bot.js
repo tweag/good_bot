@@ -77,8 +77,17 @@ class GuessBot {
   send(message) {
     setTimeout(() => {
       this.connection.send({ channel: this.SLACK_CHANNEL, message })
-    }, 1000)
+    }, 500)
   }
 }
 
-module.exports = { GuessBot, startWord, guessWord, startRE, guessRE }
+module.exports = {
+  GuessBot,
+  startWord,
+  beginWord,
+  guessWord,
+  rewardWord,
+  endWord,
+  startRE,
+  guessRE
+}
