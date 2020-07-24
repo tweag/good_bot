@@ -1,5 +1,13 @@
 require('dotenv').config({silent: true})
-const { startRE, guessRE } = require('./guess_bot.js')
+const {
+  startRE,
+  guessRE,
+  startWord,
+  beginWord,
+  guessWord,
+  rewardWord,
+  endWord
+} = require('./guess_bot.js')
 
 var Connection = require('../connection')
 
@@ -134,15 +142,15 @@ class BanditBot {
 
   sendNotStartedMessage(user, channel) {
     const message = `<@${user}> You didn't start a game!
-      \ Start a game by writing \`<@${this.botId}> start\``
+      \ Start a game by writing \`<@${this.botId}> ${startWord}\``
     this.send(message, channel)
   }
 
   sendStartMessage(user, channel, { actions }) {
     const message = `<@${user}> You've started a game.
       \ Your actions are ${actions.join(", ")}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\`\n
-      \ begin ${actions.join(", ")}`
+      \ Attempt a guess by writing \`<@${this.botId}> ${guessWord} {action}\`\n
+      \ ${beginWord} ${actions.join(", ")}`
 
     this.send(message, channel)
   }
@@ -152,14 +160,16 @@ class BanditBot {
       \ Reward: ${reward}.
       \ Total Score: ${total}.
       \ Moves Remaining: ${moves}\n
-      \ reward ${reward}, ${guess}, ${total}, ${moves}`
+      \ ${rewardWord} ${reward}, ${guess}, ${total}, ${moves}`
 
     this.send(message, channel)
   }
 
   sendGameOverMessage(user, channel, { total }) {
     const message = `<@${user}> Game over.
-      \ Your score was: ${total}`
+      \ Your score was: ${total}
+      \ ${endWord} ${total}`
+
 
     this.send(message, channel)
   }
@@ -167,7 +177,7 @@ class BanditBot {
   sendNotAGuessMessage(user, channel, { actions }) {
     const message = `<@${user}> You didn't take a possible action.
       \ Your actions are ${actions.join(", ")}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\``
+      \ Attempt a guess by writing \`<@${this.botId}> ${guessWord} {action}\``
 
     this.send(message, channel)
   }

@@ -6,11 +6,14 @@ const startWord = 'start'
 const guessWord = 'guess'
 const beginWord = 'begin'
 const rewardWord = 'reward'
+const endWord = 'gameover'
+
 
 const startRE = new RegExp(startWord)
 const guessRE = new RegExp(guessWord)
 const beginRE = new RegExp(beginWord)
 const rewardRE = new RegExp(rewardWord)
+const endRE = new RegExp(endWord)
 
 class GuessBot {
   constructor() {
@@ -30,7 +33,7 @@ class GuessBot {
   _handleBegin(text, godBotId) {
     const parts = text.split(beginRE)
     const actionSpace = parts[1].trim().split(', ')
-    this.handleExplorationSpace(actionSpace, godBotId)
+    this.handleGameStart(actionSpace, godBotId)
   }
 
   _handleReward(text, godBotId) {
@@ -41,6 +44,14 @@ class GuessBot {
       reward: parseFloat(reward),
       totalScore: parseFloat(totalScore),
       remaining: parseInt(remaining)
+    }, godBotId)
+  }
+
+  _handleEnd(text, godBotId) {
+    const parts = text.split(endRE)
+    const totalScore = parts[1].trim()
+    this.handleGameOver({
+      totalScore: parseFloat(totalScore),
     }, godBotId)
   }
 
@@ -58,14 +69,25 @@ class GuessBot {
       this._handleBegin(text, message.user)
     } else if (text.match(rewardRE)) {
       this._handleReward(text, message.user)
+    } else if (text.match(endRE)) {
+      this._handleEnd(text, message.user)
     }
   }
 
   send(message) {
     setTimeout(() => {
       this.connection.send({ channel: this.SLACK_CHANNEL, message })
-    }, 1000)
+    }, 500)
   }
 }
 
-module.exports = { GuessBot, startWord, guessWord, startRE, guessRE }
+module.exports = {
+  GuessBot,
+  startWord,
+  beginWord,
+  guessWord,
+  rewardWord,
+  endWord,
+  startRE,
+  guessRE
+}

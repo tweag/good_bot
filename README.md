@@ -33,16 +33,19 @@ The bandit bot runs the game. It will award you points, and your bot already kno
 ### Starting the game
 You start the game by calling `bot.start()` in the repl, or by calling it automatically in the constructor. This will cause your bot to send a start message to the Bandit bot, who will then reply to you with a list of items you can use to guess.
 
-### Handling the start response
-After the game is started, and the response message is posted in the Slack channel, the `handleExplorationSpace` method will be called with the list of items you can use to guess. While this list may or may not change between games, the list and the arbitrary hidden value assigned to each item will not change during the course of a game.
+### Handling the game start response
+After the game is started, and the response message is posted in the Slack channel, the `handleGameStart` method will be called with the list of items you can use to guess. While this list may or may not change between games, the list and the arbitrary hidden value assigned to each item will not change during the course of a game.
 
 Hint: you will probably want to keep this list as state. If you want your bot to play automatically (without sending commands via the repl) you will likely want to make your first guess in this handler.
 
 ### Making a guess
 You make a guess by sending a message in this format `${BANDIT_BOT_ID} ${guessWord} ${guess}` where `guess` is an item from the action space. The bandit bot will reply with a message letting you know how many points you received from that guess.
 
-### Handling the response
+### Handling the reward response
 When the bandit bot replies with a guess response, `handleReward` will be called with the following parameters: `reward`, `guess`, `totalScore`, and `remaining`. The reward is a value that is attributed to the guess your bot made, which you can use to strategize the next move. Total score lets you know what your running total is, and remaining is the number of remaining moves you have.
+
+### Game over
+When you run out of turns, you should not make another guess. The last reward message will be followed up with a new message in the channel, and the `handleGameOver` constructor will be called.
 
 Good luck!
 
