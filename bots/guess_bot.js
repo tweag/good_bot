@@ -67,4 +67,4 @@ class GuessBot {
   }
 }
 
-module.exports = { GuessBot, startWord, guessWord }
+module.exports = { GuessBot, startWord, guessWord, startRE, guessRE }
