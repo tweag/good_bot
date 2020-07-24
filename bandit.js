@@ -153,9 +153,9 @@ class BanditBot {
 
   sendStartMessage(user, channel, { actions }) {
     const message = `<@${user}> You've started a game.
-      \ Your actions are ${actions}.
+      \ Your actions are ${actions.join(", ")}.
       \ Attempt a guess by writing \`<@${this.botId}> guess {action}\`\n
-      \ begin ${actions}`
+      \ begin ${actions.join(", ")}`
 
     this.send(message, channel)
   }
