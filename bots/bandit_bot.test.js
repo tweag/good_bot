@@ -1,6 +1,6 @@
-const { BanditBot, linearDistribution } = require('./bandit')
+const { BanditBot, linearDistribution } = require('./bandit_bot')
 
-jest.mock('./connection')
+jest.mock('../connection')
 
 const actions = ['A', 'B', 'C']
 const rewardBounds = [-100, 100]

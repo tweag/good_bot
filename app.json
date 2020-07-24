@@ -1,0 +1,21 @@
+{
+  "name": "whos-a-good-bot",
+  "scripts": {},
+  "env": {
+    "TOKEN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
+
