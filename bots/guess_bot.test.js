@@ -12,7 +12,7 @@ test('Handles reward message properly', () => {
   const text = `<@TESTID> You got a response reward 10.1, jump, 90.9, 100`
   const user = 'GODBOT'
 
-  bot._handleMessage({ text, user })
+  bot._handleMention({ text, user })
   expect(bot.handleReward).toBeCalledWith({
     reward: 10.1,
     guess: 'jump',
@@ -27,6 +27,6 @@ test('Handles begin message properly', () => {
   const user = 'GODBOT'
   const expectedSpace = ['jump', 'run', 'fly']
 
-  bot._handleMessage({ text, user })
+  bot._handleMention({ text, user })
   expect(bot.handleExplorationSpace).toBeCalledWith(expectedSpace, user);
 })

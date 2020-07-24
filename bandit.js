@@ -3,7 +3,16 @@ const { startRE, guessRE } = require('./bots/guess_bot.js')
 
 var Connection = require('./connection')
 
-const ACTION_SPACE = ['A', 'B', 'C', 'D', 'E', 'F']
+const ACTION_SPACE = [
+  'attack',
+  'hack',
+  'sack',
+  'sidetrack',
+  'pack',
+  'smack',
+  'whack',
+  'hijack',
+]
 const REWARD_BOUNDS = [-100, 100]
 const NUMBER_OF_MOVES = 25
 
@@ -29,88 +38,27 @@ function linearDistribution(inclusiveBounds, length) {
   let currentIndex = 0
   let rewardValues = []
   while (length !== currentIndex) {
-    rewardValues.push(spacing * currentIndex + lowBound)
+    rewardValues.push(Math.floor(spacing * currentIndex + lowBound))
     currentIndex += 1
   }
   return rewardValues
 }
 
+const NOT_STARTED = "NOT_STARTED"
+const UNAVAILABLE_ACTION = "UNAVAILABLE_ACTION"
 
-class BanditBot {
-  constructor(config) {
-    this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
-
-    this.connection = new Connection()
-    this.connection.listen({
-      channel: this.SLACK_CHANNEL,
-      callback: this._handleMessage.bind(this),
-    })
-    this.connection.start().then(this._setBotId)
-
-    this.commands = ["start", "guess"];
+class BanditGame {
+  constructor (config) {
     this.config = config
-    this.state = {};
+    this.state = {}
   }
 
-  _setBotId = (id) => {
-    this.botId = id
+  getState(gameId) {
+    return this.state[gameId]
   }
 
-  send(message) {
-    this.connection.send({ channel: this.SLACK_CHANNEL, message })
-  }
-
-  sendNoCommandsMessage(user) {
-    this.send(`<@${user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`);
-  }
-
-  sendNotStartedMessage(user) {
-    this.send(`<@${user}> You didn't start a game!
-      \ Start a game by writing \`<@${this.botId}> start\``);
-  }
-
-  sendStartMessage(user, options) {
-    this.send(`<@${user}> You've started a game.
-      \ Your options are ${options}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\`\n
-      \ begin ${options}`);
-  }
-
-  sendGuessMessage(user, guess, reward, total, moves) {
-    this.send(`<@${user}> You guessed "${guess}".
-      \ Reward: ${reward}.
-      \ Total Score: ${total}.
-      \ Moves Remianing: ${moves}\n
-      \ reward ${reward}, ${guess}, ${total}, ${moves}`)
-  }
-
-  sendGameOverMessage(user, total) {
-      this.send(`<@${user}> Game over.
-        \ Your score was: ${total}`);
-  }
-
-  sendNotAGuessMessage(user, options) {
-    this.send(`<@${user}> You didn't take a possible action.
-      \ Your options are ${options.join(", ")}.
-      \ Attempt a guess by writing \`<@${this.botId}> guess {option}\``);
-  }
-
-  makeGuess(user, guess, options) {
-    let playerState = this.state[user];
-    let reward = playerState.rewards[guess];
-    playerState.total += reward
-    playerState.moves -= 1
-
-    this.sendGuessMessage(user, guess, reward, playerState.total, playerState.moves)
-
-    if (playerState.moves <= 0) {
-      this.resetGame(user)
-      this.sendGameOverMessage(user, playerState.total)
-    }
-  }
-
-  resetGame(user) {
-    delete this.state[user];
+  getActions(state) {
+    return Object.keys(state.rewards)
   }
 
   generateInitialState() {
@@ -131,38 +79,143 @@ class BanditBot {
     }
   }
 
-  handleDirectedMessage(message) {
-    const { text, user } = message
+  resetGame(gameId) {
+    delete this.state[gameId];
+  }
 
-    if (text.match(startRE)) {
-      const userState = this.generateInitialState()
-      this.state[user] = userState
-      this.sendStartMessage(user, Object.keys(userState.rewards));
-    } else if (text.match(guessRE)) {
-      const userState = this.state[user]
-      if (userState) {
-        const guess = text.split(guessRE)[1].trim()
-        const options = Object.keys(userState.rewards)
+  startGame(gameId) {
+    const state = this.generateInitialState()
+    const actions = this.getActions(state)
+    this.state[gameId] = state
+    return { state, actions }
+  }
 
-        if (options.includes(guess)) {
-          this.makeGuess(user, guess, options)
-        } else {
-          this.sendNotAGuessMessage(user, options)
-        }
-      } else {
-        this.sendNotStartedMessage(user)
-      }
-    } else {
-      this.sendNoCommandsMessage(user);
+  makeGuess(gameId, guess) {
+    const state = this.state[gameId];
+
+    if (!state) {
+      return { error: NOT_STARTED }
     }
+
+    if (!this.getActions(state).includes(guess)) {
+      return { error: UNAVAILABLE_ACTION, actions: this.getActions(state) }
+    }
+
+    const reward = state.rewards[guess];
+    const newState = {
+      ...state,
+      total: state.total + reward,
+      moves: state.moves - 1,
+    }
+    this.state[gameId] = newState
+
+    let ended = false
+    if (newState.moves <= 0) {
+      this.resetGame(gameId)
+      ended = true
+    }
+
+    return { error: null, state: newState, guess, reward, ended }
+  }
+}
+
+class BanditBot {
+  constructor(config) {
+    this.connection = new Connection()
+    this.connection.onMention({
+      callback: this._handleMessage.bind(this),
+    })
+    this.connection.start().then(this._setBotId)
+
+    this.game = new BanditGame(config)
+
+    this.commands = ["start", "guess"];
+  }
+
+  _setBotId = (id) => {
+    this.botId = id
+  }
+
+  send(message, channel) {
+    this.connection.send({ channel, message })
+  }
+
+  sendNoCommandsMessage(user, channel) {
+    const message = `<@${user}> Unrecognized command. Available commands are: ${this.commands.join(", ")}`
+    this.send(message, channel)
+  }
+
+  sendNotStartedMessage(user, channel) {
+    const message = `<@${user}> You didn't start a game!
+      \ Start a game by writing \`<@${this.botId}> start\``
+    this.send(message, channel)
+  }
+
+  sendStartMessage(user, channel, { actions }) {
+    const message = `<@${user}> You've started a game.
+      \ Your actions are ${actions.join(", ")}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\`\n
+      \ begin ${actions.join(", ")}`
+
+    this.send(message, channel)
+  }
+
+  sendGuessMessage(user, channel, { guess, reward, total, moves }) {
+    const message = `<@${user}> You guessed "${guess}".
+      \ Reward: ${reward}.
+      \ Total Score: ${total}.
+      \ Moves Remaining: ${moves}\n
+      \ reward ${reward}, ${guess}, ${total}, ${moves}`
+
+    this.send(message, channel)
+  }
+
+  sendGameOverMessage(user, channel, { total }) {
+    const message = `<@${user}> Game over.
+      \ Your score was: ${total}`
+
+    this.send(message, channel)
+  }
+
+  sendNotAGuessMessage(user, channel, { actions }) {
+    const message = `<@${user}> You didn't take a possible action.
+      \ Your actions are ${actions.join(", ")}.
+      \ Attempt a guess by writing \`<@${this.botId}> guess {action}\``
+
+    this.send(message, channel)
   }
 
   _handleMessage(message) {
-    // NOTE: Be very careful here. If the botId is not checked for properly
-    // it will result in an infinite loop.
-    if (message.text.includes(`<@${this.botId}>`) && message.user != this.botId)
-    {
-      this.handleDirectedMessage(message);
+    const { text, user, channel } = message
+    const gameId = `${user}:${channel}`
+
+    if (text.match(startRE)) {
+      const { actions } = this.game.startGame(gameId)
+      this.sendStartMessage(user, channel, { actions });
+
+    } else if (text.match(guessRE)) {
+      const guess = text.split(guessRE)[1].trim()
+      const { error, actions, state, reward, ended } = this.game.makeGuess(gameId, guess)
+
+      if (error === NOT_STARTED) {
+        this.sendNotStartedMessage(user, channel)
+      } else if (error === UNAVAILABLE_ACTION) {
+        this.sendNotAGuessMessage(user, channel, { actions })
+      } else {
+        this.sendGuessMessage(user, channel, {
+          guess,
+          reward,
+          total: state.total,
+          moves: state.moves
+        })
+      }
+
+      if (ended) {
+        this.sendGameOverMessage(user, channel, { total: state.total })
+      }
+
+    } else {
+      this.sendNoCommandsMessage(user, channel);
     }
   }
 }

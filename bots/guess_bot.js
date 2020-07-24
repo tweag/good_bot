@@ -16,16 +16,15 @@ class GuessBot {
   constructor() {
     this.SLACK_CHANNEL = process.env.SLACK_CHANNEL
     this.connection = new Connection()
-    this.connection.listen({
+    this.connection.onChannelMessage({
       channel: this.SLACK_CHANNEL,
       callback: this._handleMessage.bind(this),
     })
-    this.connection.start().then(this._setId)
-  }
-
-  _setId = (id) => {
-    this.id = id
-    this.myselfRE = new RegExp(id)
+    this.connection.onChannelMention({
+      channel: this.SLACK_CHANNEL,
+      callback: this._handleMention.bind(this),
+    })
+    this.connection.start()
   }
 
   _handleBegin(text, godBotId) {
@@ -46,17 +45,19 @@ class GuessBot {
   }
 
   _handleMessage(message) {
-    const { text } = message
-    if (message.subtype === 'bot_message') {
-      // The bot/user that is being messaged is not in this channel
+    // Ephemeral messages can mean that we just mentioned someone
+    // who is not in this channel
+    if (message.is_ephemeral) {
       this.send("Is it possible that bot is not here?")
+    }
+  }
 
-    } else if (text && text.match(this.myselfRE)) {
-      if (text.match(beginRE)) {
-        this._handleBegin(text, message.user)
-      } else if (text.match(rewardRE)) {
-        this._handleReward(text, message.user)
-      }
+  _handleMention(message) {
+    const { text } = message
+    if (text.match(beginRE)) {
+      this._handleBegin(text, message.user)
+    } else if (text.match(rewardRE)) {
+      this._handleReward(text, message.user)
     }
   }
 
