@@ -14,14 +14,12 @@ class MyBot extends GuessBot {
       this.banditBotId = `<@${banditBotId}>`
     }
     this.space = space
-    this.send(`Wow this is hard, I can guess from any of these choices: ${space.join(', ')}`)
+    this.send(`Wow this is hard, what should I choose? ${space.join(', ')}`)
     this.makeGuess(this.space[0])
   }
 
   handleReward ({reward, guess, totalScore, remaining}, banditBotId) {
-    this.send(
-      `I ${guess}ed and got ${reward} points. I have ${remaining} guesses left and I've raked in ${totalScore} points`
-    )
+    this.send(`I ${guess}ed and got ${reward} points.`)
 
     // This is where your guess logic goes. The idea is to maximize your total points.
     // Currently, I'm just iterating over the whole action space.
