@@ -7,6 +7,7 @@
     "repl": "node -i -e \"$(< index.js)\"",
     "start": "node index.js",
     "bandit": "node -i -e \"$(< bandit.js)\"",
+    "randit": "node -i -e \"$(< randit.js)\"",
     "test": "jest . --watch"
   },
   "dependencies": {
