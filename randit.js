@@ -2,14 +2,9 @@ const http = require('http');
 const { RanditBot } = require('./bots/randit_bot')
 
 const ACTION_SPACE = [
-  'attack',
-  'hack',
-  'sack',
-  'sidetrack',
-  'pack',
-  'smack',
-  'whack',
-  'hijack',
+  'abide',
+  'provide',
+  'elide'
 ]
 const PAYOUT_CHANCE_BOUNDS = [10, 90]
 const NUMBER_OF_MOVES = 25

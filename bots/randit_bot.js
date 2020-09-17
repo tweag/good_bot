@@ -158,19 +158,28 @@ class RanditBot {
     const message = `<@${user}> You've started a game.
       \ Your actions are ${actions.join(", ")}.
       \ Attempt a guess by writing \`<@${this.botId}> ${guessWord} {action}\`\n
-      \ ${beginWord} ${actions.join(", ")}`
+      \ ${beginWord}: ${actions.join(", ")}`
 
     this.send(message, channel)
   }
 
   sendGuessMessage(user, channel, { guess, reward, total, moves }) {
-    const message = `<@${user}> You guessed "${guess}".
+    const preMessage = `<@${user}> You ${guess}d...`
+
+    this.send(preMessage, channel)
+
+    let messagePreamble = "...and you were rewarded!"
+    if (reward == 0) {
+        messagePreamble = "...and nothing was gained."
+    }
+
+    const message = `<@${user}> ${messagePreamble}
       \ Reward: ${reward}.
       \ Total Score: ${total}.
       \ Moves Remaining: ${moves}\n
       \ ${rewardWord} ${reward}, ${guess}, ${total}, ${moves}`
 
-    this.send(message, channel)
+    setTimeout(() => this.send(message, channel), 2000)
   }
 
   sendGameOverMessage(user, channel, { total }) {
