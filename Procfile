@@ -1,1 +1,1 @@
-web: node bandit.js
+web: node randit.js

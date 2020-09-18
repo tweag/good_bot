@@ -39,5 +39,5 @@ test('Handles begin message properly', () => {
   const expectedTotal = 1000
 
   bot._handleMention({ text, user })
-  expect(bot.handleGameOver).toBeCalledWith({ totalScore: expectedTotal });
+  expect(bot.handleGameOver).toBeCalledWith({ totalScore: expectedTotal }, user);
 })
