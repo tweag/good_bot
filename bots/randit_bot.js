@@ -158,7 +158,7 @@ class RanditBot {
     const message = `<@${user}> You've started a game.
       \ Your actions are ${actions.join(", ")}.
       \ Attempt a guess by writing \`<@${this.botId}> ${guessWord} {action}\`\n
-      \ ${beginWord}: ${actions.join(", ")}`
+      \ ${beginWord} ${actions.join(", ")}`
 
     this.send(message, channel)
   }
