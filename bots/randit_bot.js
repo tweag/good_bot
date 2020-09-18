@@ -168,7 +168,7 @@ class RanditBot {
 
     this.send(preMessage, channel)
 
-    let messagePreamble = "...and you were rewarded!"
+    let messagePreamble = "...and you were awarded!"
     if (reward == 0) {
         messagePreamble = "...and nothing was gained."
     }
